@@ -61,6 +61,13 @@ ament_target_dependencies(rough10 geodesy rclcpp geometry_msgs sensor_msgs std_m
 add_executable(rough11 src/rough11.cpp)
 ament_target_dependencies(rough11 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
+add_executable(rough12 src/rough12.cpp)
+ament_target_dependencies(rough12 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough13 src/rough13.cpp)
+ament_target_dependencies(rough13 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -88,6 +95,8 @@ install(TARGETS
   rough9
   rough10
   rough11
+  rough12
+  rough13
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
