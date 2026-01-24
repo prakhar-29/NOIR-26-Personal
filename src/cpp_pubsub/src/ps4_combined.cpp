@@ -26,29 +26,34 @@ private:
     {
         auto v_drive = geometry_msgs::msg::Twist();
         v_drive.linear.x = msg->axes[1];   // left stick vertical
-        v_drive.angular.z = msg->axes[3];  // right stick horizontal
+        v_drive.angular.z = (msg->axes[3]);  // right stick horizontal
         pub_drive->publish(v_drive);
     }
 
     void joy2(sensor_msgs::msg::Joy::SharedPtr msg)
     {
         auto v_arm = geometry_msgs::msg::Twist();
-
-        v_arm.linear.x  = msg->axes[1]; // Gripper
-        v_arm.linear.y  = msg->axes[4]; // Actuator
-        v_arm.linear.z  = msg->axes[7]; // Wrist
-        v_arm.angular.x = msg->axes[6]; // Elbow
-
-        // joint5: square = -1, circle = +1
-        bool square = msg->buttons[3];
-        bool circle = msg->buttons[1];
-        v_arm.angular.y = square ? -1.0 : (circle ? 1.0 : 0.0);
-
-        // joint4: cross (X) = -1, triangle = +1
-        bool cross = msg->buttons[0];
-        bool triangle = msg->buttons[2];
-        v_arm.angular.z = cross ? (-0.15) : (triangle ? (0.15) : 0.0);
-
+        if(msg->buttons[0]!=0)//cross
+        {
+            v_arm.linear.y  = -msg->axes[1];//
+        }
+        if(msg->buttons[1]!=0)//circle
+        {
+            v_arm.linear.z = msg->axes[1];//
+        }
+        if(msg->buttons[2]!=0)//triangle
+        {
+            v_arm.angular.x = msg->axes[1];//
+        }
+        if(msg->buttons[3]!=0)//square
+        {
+            v_arm.angular.y = -msg->axes[1];//
+        }
+        else if(msg->buttons[0] ==0 && msg->buttons[1] ==0 && msg->buttons[2] ==0 && msg->buttons[3] ==0)
+        {
+            v_arm.linear.x = msg->axes[1];   // left stick vertical
+            v_arm.angular.z = (-msg->axes[3]);  // right stick horizontal
+        }
         pub_arm->publish(v_arm);
     }
 

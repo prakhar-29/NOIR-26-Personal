@@ -4,7 +4,7 @@ import cv2
 app = Flask(__name__)
 
 # Define all cameras here
-camera_indices = [0, 2]  # Modify based on your setup
+camera_indices = [0, 1,2,3]  # Modify based on your setup
 cameras = {i: cv2.VideoCapture(i) for i in camera_indices}
 
 # Configure each camera for smoother streaming

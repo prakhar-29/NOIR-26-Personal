@@ -3,6 +3,7 @@
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "std_msgs/msg/int32.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
 
 #include <geographic_msgs/msg/geo_point.hpp>
 #include <geodesy/utm.h>
@@ -40,6 +41,10 @@ public:
         lidar_sub_ = create_subscription<sensor_msgs::msg::LaserScan>("/ldlidar_node/scan", 10,
             std::bind(&gps_controller_cin::lidar_callback, this, std::placeholders::_1));
 
+        // NEW: Subscribe to cone coordinates from camera
+        cone_sub_ = create_subscription<std_msgs::msg::Float32MultiArray>("/cone_coordinates", 10,
+            std::bind(&gps_controller_cin::cone_callback, this, std::placeholders::_1));
+
         /* -------- PUBLISHERS -------- */
         cmd_pub_ = create_publisher<geometry_msgs::msg::Twist>("/cmd_vel1", 10);
     }
@@ -49,6 +54,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr gps_sub_;
     rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr imu_sub_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
+    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr cone_sub_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
 
     /* -------- STATE -------- */
@@ -61,26 +67,42 @@ private:
     float front_min_{10.0};
     bool obstacle_{false};
 
+    // Camera-based cone detection state
+    bool cone_detected_camera_{false};
+    float cone_center_x_{0.0};
+    float cone_center_y_{0.0};
+    float cone_class_id_{0.0};
+    rclcpp::Time last_cone_detection_time_;
+
     // State machine
     enum class State {
         NAVIGATE_TO_GOAL,
-        CONE_SEARCH_AND_APPROACH
+        CONE_SEARCH_AND_APPROACH,
+        CONE_ALIGN,
+        CONE_APPROACH_FINAL
     };
     State current_state_{State::NAVIGATE_TO_GOAL};
 
     /* -------- PARAMETERS -------- */
-    const float OBSTACLE_THRESHOLD = 1.0;      // Detection distance for navigation
-    const float CRITICAL_DISTANCE = 0.3;       // Emergency stop distance
-    const float AVOIDANCE_GAIN = 1.3;          // How aggressively to avoid
-    const float GOAL_GAIN = 1.0;               // How much to bias toward goal
-    const float CONE_SEARCH_RADIUS = 2.0;      // Start cone search within 2m
+    const float OBSTACLE_THRESHOLD = 1.5;      // Detection distance for navigation
+    const float CRITICAL_DISTANCE = 0.5;       // Emergency stop distance
+    const float AVOIDANCE_GAIN = 1.1;          // How aggressively to avoid
+    const float GOAL_GAIN = 1.1;               // How much to bias toward goal
+    const float CONE_SEARCH_RADIUS = 1.0;      // Start cone search within 2.5m
     
-    // Cone attraction parameters (from your provided code)
-    const double CONE_DETECTION_THRESHOLD = 2.0;  // Detect cone within 2m
-    const double CONE_STOP_THRESHOLD = 0.3;       // Stop when 0.3m away from cone
-    const double CONE_LINEAR_VEL = 0.25;          // Linear velocity towards cone
-    const double CONE_ROTATION_VEL = 0.5;         // Rotation velocity for searching
-    const double CONE_KPZ = 0.5;                  // Angular gain for turning towards cone
+    // Camera parameters
+    const float CAMERA_WIDTH = 640.0;          // Camera resolution width (adjust to your camera)
+    const float CAMERA_HEIGHT = 480.0;         // Camera resolution height
+    const float CAMERA_CENTER_X = CAMERA_WIDTH / 2.0;
+    const float ALIGNMENT_TOLERANCE = 50.0;    // Pixels - cone must be within this range of center
+    const float CONE_DETECTION_TIMEOUT = 1.0;  // Seconds - max time since last detection
+    
+    // Cone approach parameters
+    const double CONE_STOP_THRESHOLD = 0.5;   // Stop when 0.45m away from cone (LiDAR based)
+    const double CONE_LINEAR_VEL = 0.15;       // Linear velocity towards cone
+    const double CONE_ROTATION_VEL = 0.25;      // Rotation velocity for searching
+    const double CONE_ALIGN_KP = 0.003;        // Proportional gain for alignment (angular velocity per pixel error)
+    const double MAX_ALIGN_ANGULAR_VEL = 0.25;  // Maximum angular velocity during alignment
 
     /* -------- UTILS -------- */
     double clamp(double v, double lo, double hi)
@@ -95,7 +117,53 @@ private:
         return angle;
     }
 
+    bool is_cone_detection_valid()
+    {
+        if (!cone_detected_camera_) return false;
+        
+        auto now = this->now();
+        double time_since_detection = (now - last_cone_detection_time_).seconds();
+        
+        return time_since_detection < CONE_DETECTION_TIMEOUT;
+    }
+
+    double calculate_alignment_error()
+    {
+        // Calculate pixel error from center
+        // Positive error means cone is to the right, need to turn right (negative angular velocity)
+        // Negative error means cone is to the left, need to turn left (positive angular velocity)
+        return cone_center_x_ - CAMERA_CENTER_X;
+    }
+
+    bool is_cone_aligned()
+    {
+        double error = std::abs(calculate_alignment_error());
+        return error < ALIGNMENT_TOLERANCE;
+    }
+
     /* -------- CALLBACKS -------- */
+
+    void cone_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
+    {
+        // Data format: [cx1, cy1, class_id1, cx2, cy2, class_id2, ...]
+        // For simplicity, we'll use the first detected cone
+        
+        if (msg->data.size() >= 3 && msg->data[0] != 0.0)
+        {
+            cone_detected_camera_ = true;
+            cone_center_x_ = msg->data[0];
+            cone_center_y_ = msg->data[1];
+            cone_class_id_ = msg->data[2];
+            last_cone_detection_time_ = this->now();
+            
+            RCLCPP_DEBUG(get_logger(), "Cone detected at pixel: (%.1f, %.1f), class: %.0f", 
+                        cone_center_x_, cone_center_y_, cone_class_id_);
+        }
+        else
+        {
+            cone_detected_camera_ = false;
+        }
+    }
 
     void imu_callback(const std_msgs::msg::Int32::SharedPtr msg)
     {
@@ -167,12 +235,11 @@ private:
         
         if (current_state_ == State::NAVIGATE_TO_GOAL)
         {
-            // Check if within 2m of goal - start cone search
+            // Check if within 2.5m of goal - start cone search
             if (dist < CONE_SEARCH_RADIUS)
             {
                 current_state_ = State::CONE_SEARCH_AND_APPROACH;
-                RCLCPP_INFO(get_logger(), "Within 2m of goal. Starting cone search and approach...");
-                // Don't return - let it fall through to cone logic
+                RCLCPP_INFO(get_logger(), "Within %.1fm of goal. Starting camera-based cone detection...", CONE_SEARCH_RADIUS);
             }
             else
             {
@@ -222,11 +289,11 @@ private:
                     double ang = clamp(angle_error / M_PI, -1.0, 1.0);
                     
                     if(dist > 5.0){
-                        cmd.linear.x = 1.0;
+                        cmd.linear.x = 1*0.8;
                     } else {
                         cmd.linear.x = clamp(dist / 5.0, 0.0, 1.0);
                     }
-                    cmd.angular.z = ang;
+                    cmd.angular.z = 1*0.8;
                 }
                 
                 cmd_pub_->publish(cmd);
@@ -236,50 +303,106 @@ private:
         
         if (current_state_ == State::CONE_SEARCH_AND_APPROACH)
         {
-            // Use the cone attraction logic from your provided code
-            float closest_distance = std::min(left_min_, right_min_);
-            
-            // Check if cone is detected within detection threshold
-            bool cone_detected = (closest_distance < CONE_DETECTION_THRESHOLD);
-            
-            if (!cone_detected)
+            // Use camera to detect cone
+            if (is_cone_detection_valid())
             {
-                // No cone detected - rotate 360 to search
+                // Cone detected by camera - transition to alignment
+                current_state_ = State::CONE_ALIGN;
+                RCLCPP_INFO(get_logger(), "Cone detected by camera! Starting alignment...");
+            }
+            else
+            {
+                // No cone detected - rotate to search
                 cmd.linear.x = 0.0;
                 cmd.angular.z = CONE_ROTATION_VEL;
                 RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
-                    "No cone detected. Searching... L:%.2f R:%.2f", left_min_, right_min_);
+                    "Searching for cone with camera...");
+                cmd_pub_->publish(cmd);
+                return;
             }
-            else if (closest_distance <= CONE_STOP_THRESHOLD)
+        }
+        
+        if (current_state_ == State::CONE_ALIGN)
+        {
+            // Check if cone is still detected
+            if (!is_cone_detection_valid())
             {
-                // Close enough - stop
+                // Lost cone - go back to search
+                current_state_ = State::CONE_SEARCH_AND_APPROACH;
+                RCLCPP_WARN(get_logger(), "Lost cone detection! Returning to search...");
+                cmd_pub_->publish(cmd);
+                return;
+            }
+            
+            // Check if aligned
+            if (is_cone_aligned())
+            {
+                // Aligned - move to final approach
+                current_state_ = State::CONE_APPROACH_FINAL;
+                RCLCPP_INFO(get_logger(), "Cone aligned! Starting final approach...");
+            }
+            else
+            {
+                // Calculate alignment correction
+                double pixel_error = calculate_alignment_error();
+                
+                // Negative pixel_error means cone is left, need positive angular (turn left)
+                // Positive pixel_error means cone is right, need negative angular (turn right)
+                cmd.angular.z = -CONE_ALIGN_KP * pixel_error;
+                cmd.angular.z = clamp(cmd.angular.z, -MAX_ALIGN_ANGULAR_VEL, MAX_ALIGN_ANGULAR_VEL);
+                
+                // Slow forward movement while aligning
+                cmd.linear.x = 0.05;
+                
+                RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500,
+                    "Aligning: Cone at pixel %.1f (error: %.1f), Angular vel: %.3f",
+                    cone_center_x_, pixel_error, cmd.angular.z);
+                
+                cmd_pub_->publish(cmd);
+                return;
+            }
+        }
+        
+        if (current_state_ == State::CONE_APPROACH_FINAL)
+        {
+            // Check if cone is still detected
+            if (!is_cone_detection_valid())
+            {
+                // Lost cone - go back to search
+                current_state_ = State::CONE_SEARCH_AND_APPROACH;
+                RCLCPP_WARN(get_logger(), "Lost cone during approach! Returning to search...");
+                cmd_pub_->publish(cmd);
+                return;
+            }
+            
+            // Check LiDAR distance
+            float closest_distance = std::min({left_min_, right_min_, front_min_});
+            
+            if (closest_distance <= CONE_STOP_THRESHOLD)
+            {
+                // Reached cone - stop
                 cmd.linear.x = 0.0;
                 cmd.angular.z = 0.0;
-                RCLCPP_INFO(get_logger(), "Reached cone! Stopping at distance: %.2fm", closest_distance);
+                RCLCPP_INFO(get_logger(), "SUCCESS! Reached cone at distance: %.2fm", closest_distance);
                 cmd_pub_->publish(cmd);
                 rclcpp::shutdown();
                 return;
             }
             else
             {
-                // Cone detected but not close enough - move towards it
+                // Continue approach with minor alignment corrections
+                double pixel_error = calculate_alignment_error();
+                
+                // Small alignment correction during approach
+                cmd.angular.z = -CONE_ALIGN_KP * pixel_error * 0.5; // Reduced correction during approach
+                cmd.angular.z = clamp(cmd.angular.z, -MAX_ALIGN_ANGULAR_VEL * 0.5, MAX_ALIGN_ANGULAR_VEL * 0.5);
+                
+                // Move forward
                 cmd.linear.x = CONE_LINEAR_VEL;
                 
-                // Turn towards the closer obstacle (cone)
-                if (left_min_ < right_min_)
-                {
-                    // Cone on left - turn left (positive angular z)
-                    cmd.angular.z = CONE_KPZ * (CONE_DETECTION_THRESHOLD - left_min_);
-                }
-                else
-                {
-                    // Cone on right - turn right (negative angular z)
-                    cmd.angular.z = -CONE_KPZ * (CONE_DETECTION_THRESHOLD - right_min_);
-                }
-                
                 RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500,
-                    "Moving towards cone. Left: %.2fm, Right: %.2fm, Closest: %.2fm", 
-                    left_min_, right_min_, closest_distance);
+                    "Approaching cone: Distance %.2fm, Pixel %.1f, Linear: %.2f, Angular: %.3f",
+                    closest_distance, cone_center_x_, cmd.linear.x, cmd.angular.z);
             }
         }
         

@@ -2,7 +2,7 @@ import serial
 import time
 
 # Replace with the correct port for the ESP32
-port = "/dev/esp32_1"  # For Linux/Mac
+port = "/dev/esp32_3"  # For Linux/Mac
 # port = "COM3"        # For Windows
 
 baudrate = 115200  # Standard ESP32 baud rate

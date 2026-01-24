@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'esp32rst = py_pubsub.esp32_rst:main' , 
             'esp32rst1 = py_pubsub.esp32_rst1:main' , 
+            'esp32rst2 = py_pubsub.esp32_rst2:main' ,
             'campub = py_pubsub.camfeed:main',
             'camsub = py_pubsub.camsub:main',
             'camfinal = py_pubsub.camfeed_final:main',

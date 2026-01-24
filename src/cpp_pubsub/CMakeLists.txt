@@ -61,12 +61,36 @@ ament_target_dependencies(rough10 geodesy rclcpp geometry_msgs sensor_msgs std_m
 add_executable(rough11 src/rough11.cpp)
 ament_target_dependencies(rough11 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
-add_executable(rough12 src/rough12.cpp)
-ament_target_dependencies(rough12 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+add_executable(rado1 src/rado1.cpp)
+ament_target_dependencies(rado1 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
 add_executable(rough13 src/rough13.cpp)
 ament_target_dependencies(rough13 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
+add_executable(rough14 src/rough14.cpp)
+ament_target_dependencies(rough14 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough15 src/rough15.cpp)
+ament_target_dependencies(rough15 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough16 src/rough16.cpp)
+ament_target_dependencies(rough16 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+
+add_executable(rough17 src/rough17.cpp)
+ament_target_dependencies(rough17 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough18 src/rough18.cpp)
+ament_target_dependencies(rough18 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough19 src/rough19.cpp)
+ament_target_dependencies(rough19 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough20 src/rough20.cpp)
+ament_target_dependencies(rough20 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+add_executable(rough21 src/rough21.cpp)
+ament_target_dependencies(rough21 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -95,8 +119,16 @@ install(TARGETS
   rough9
   rough10
   rough11
-  rough12
+  rado1
   rough13
+  rough14
+  rough15
+  rough16
+  rough17
+  rough18
+  rough19
+  rough20
+  rough21
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
