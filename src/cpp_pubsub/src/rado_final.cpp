@@ -193,7 +193,7 @@ private:
                 arm_cmd.angular.x = 1.0;  // Shoulder down
                 arm_cmd_pub_->publish(arm_cmd);
                 RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000, 
-                    "Shoulder moving down... %.1f seconds remaining", 4.0 - elapsed);
+                    "Shoulder moving down... %.1f seconds remaining", 3.0 - elapsed);
             } else {
                 // Switch to shoulder stop phase
                 drop_sequence_phase_ = 1;

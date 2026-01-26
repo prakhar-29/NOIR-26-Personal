@@ -22,6 +22,9 @@ ament_target_dependencies(ps4 rclcpp geometry_msgs sensor_msgs)
 add_executable(2ps4 src/ps4_combined.cpp)
 ament_target_dependencies(2ps4 rclcpp geometry_msgs sensor_msgs)
 
+add_executable(ps4_abex src/ps4_abex.cpp)
+ament_target_dependencies(ps4_abex rclcpp geometry_msgs sensor_msgs)
+
 add_executable(gps_sub src/gps_sub.cpp)
 ament_target_dependencies(gps_sub rclcpp geometry_msgs sensor_msgs std_msgs)
 
@@ -89,8 +92,8 @@ ament_target_dependencies(rough19 geodesy rclcpp geometry_msgs sensor_msgs std_m
 add_executable(rough20 src/rough20.cpp)
 ament_target_dependencies(rough20 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
-add_executable(rough21 src/rough21.cpp)
-ament_target_dependencies(rough21 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+add_executable(rado_final src/rado_final.cpp)
+ament_target_dependencies(rado_final geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -128,7 +131,8 @@ install(TARGETS
   rough18
   rough19
   rough20
-  rough21
+  rado_final
+  ps4_abex
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
