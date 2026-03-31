@@ -122,8 +122,9 @@ Coming Soon
 
 ## 👥 Contributors
 
-* [Jival Dhingra](https://github.com/jivalz)
+* [Jival Dhingra](https://github.com/jivalz) 
 * [Prakhar Dwivedi](https://github.com/prakhar-29)
+* [Pranav Singh](https://github.com/Pranav-710)
 
 ---
 
