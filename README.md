@@ -112,7 +112,7 @@ Coming Soon
 
 ## 🦾 Robotic Arm (URDF + MoveIt)
 
-* Contains robot description (URDF)
+* Contains robotic arm description (URDF)
 * Includes MoveIt configuration for motion planning
 
 **Repository Link:**
