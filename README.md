@@ -39,12 +39,10 @@ src/
 ### cpp_pubsub
 
 * C++ ROS 2 nodes
-* Used for faster communication
 
 ### py_pubsub
 
 * Python ROS 2 nodes
-* Used for simple logic and testing
 
 ### my_launch
 
@@ -104,8 +102,8 @@ ros2 launch my_launch rado_auto.launch.py
 
 ## 🤖 Arduino (micro-ROS)
 
-* Microcontroller code for rover hardware communication
-* Uses micro-ROS for interfacing with ROS 2
+* Microcontroller code for ESP32 Micontroller
+* Use micro_ros_arduino library built for ROS2 Humble only
 
 **Repository Link:**
 Coming Soon
