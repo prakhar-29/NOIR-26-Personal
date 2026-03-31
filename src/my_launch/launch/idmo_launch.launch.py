@@ -11,8 +11,8 @@ def generate_launch_description():
             period= 0.5,
             actions=[
                 ExecuteProcess(
-                    cmd=['ros2', 'run', 'py_pubsub', 'camfinal'],
-                    name = 'camfeed_final'
+                    cmd=['ros2', 'run', 'py_pubsub', 'camfeed_idmo'],
+                    name = 'camfeed_idmo'
                 )
             ]
         ),
@@ -26,11 +26,56 @@ def generate_launch_description():
             ]
         ),
         TimerAction(
+            period= 1.5,
+            actions=[
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'py_pubsub', 'esp32rst2'],
+                    name = 'esp32_reset3'
+                )
+            ]
+        ),
+        TimerAction(
+            period= 1.75,
+            actions=[
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'py_pubsub', 'esp32rst3'],
+                    name = 'esp32_reset4'
+                )
+            ]
+        ),
+        TimerAction(
             period= 2.0,
             actions=[
                 ExecuteProcess(
-                    cmd=['ros2', 'run', 'cpp_pubsub', '2ps4'],
-                    name = '2ps4_node'
+                    cmd=['ros2', 'run', 'py_pubsub', 'esp32rst4'],
+                    name = 'esp32_reset5'
+                )
+            ]
+        ),
+        TimerAction(
+            period= 2.25,
+            actions=[
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/esp32_1'],
+                    name = 'micro_ros_agent_0'
+                )
+            ]
+        ),
+        TimerAction(
+            period= 2.5,
+            actions=[
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/esp32_2'],
+                    name = 'micro_ros_agent_1'
+                )
+            ]
+        ),
+        TimerAction(
+            period= 2.75,
+            actions=[
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/esp32_3'],
+                    name = 'micro_ros_agent_2'
                 )
             ]
         ),
@@ -38,17 +83,17 @@ def generate_launch_description():
             period= 3.0,
             actions=[
                 ExecuteProcess(
-                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/ttyUSB0'],
-                    name = 'micro_ros_agent_0'
+                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/esp32_4'],
+                    name = 'micro_ros_agent_3'
                 )
             ]
         ),
         TimerAction(
-            period= 4.0,
+            period= 3.25,
             actions=[
                 ExecuteProcess(
-                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/ttyUSB1'],
-                    name = 'micro_ros_agent_1'
+                    cmd=['ros2', 'run', 'micro_ros_agent', 'micro_ros_agent', 'serial', '--dev', '/dev/esp32_5'],
+                    name = 'micro_ros_agent_4'
                 )
             ]
         )

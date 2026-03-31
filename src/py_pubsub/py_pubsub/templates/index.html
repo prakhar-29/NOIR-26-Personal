@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroROS Sensor Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2d3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f9fbfc;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e3eef5 0%, #f9fbfc 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            display: flex;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+            padding: 20px 0;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo h2 {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .menu-section {
+            margin-bottom: 25px;
+        }
+        
+        .menu-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px 10px;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        .menu-item.active {
+            background: rgba(52, 152, 219, 0.15);
+            border-left: 3px solid var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .menu-item i {
+            margin-right: 12px;
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-dot.connected {
+            background-color: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.disconnected {
+            background-color: var(--danger);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .category-section {
+            margin-bottom: 40px;
+        }
+        
+        .category-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 22px;
+            color: white;
+        }
+        
+        .temp-icon { background: linear-gradient(135deg, #ff7676, #f54ea2); }
+        .humidity-icon { background: linear-gradient(135deg, #42e695, #3bb2b8); }
+        .pressure-icon { background: linear-gradient(135deg, #ffb347, #ffcc33); }
+        .altitude-icon { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+        .gas-icon { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+        .raw-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .camera-icon { background: linear-gradient(135deg, #8A2387, #F27121); }
+        .npk-icon { background: linear-gradient(135deg, #9C27B0, #673AB7); }
+        .soil-icon { background: linear-gradient(135deg, #8BC34A, #4CAF50); }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .card-unit {
+            font-size: 16px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        .progress-container {
+            margin-top: 15px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        
+        .temp-fill { background: linear-gradient(to right, #4facfe, #00f2fe); }
+        .humidity-fill { background: linear-gradient(to right, #43e97b, #38f9d7); }
+        .pressure-fill { background: linear-gradient(to right, #a166ab, #5073b8); }
+        .altitude-fill { background: linear-gradient(to right, #6a11cb, #2575fc); }
+        .gas-fill { background: linear-gradient(to right, #ff7e5f, #feb47b); }
+        .npk-fill { background: linear-gradient(to right, #9C27B0, #673AB7); }
+        .soil-fill { background: linear-gradient(to right, #8BC34A, #4CAF50); }
+        
+        .sensor-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+        }
+        
+        .sensor-status.on {
+            background: var(--success);
+            color: white;
+        }
+        
+        .sensor-status.off {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .sensor-status.unknown {
+            background: var(--gray);
+            color: white;
+        }
+        
+        .gas-values {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .gas-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .gas-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+        
+        .gas-concentration {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .gas-unit {
+            font-size: 12px;
+            color: var(--gray);
+            margin-left: 4px;
+        }
+        
+        .update-time {
+            font-size: 12px;
+            color: var(--gray);
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .connection-info {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 10px;
+        }
+        
+        .raw-data-panel {
+            background: rgba(0,0,0,0.02);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .raw-data-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .raw-data-line:last-child {
+            border-bottom: none;
+        }
+        
+        .camera-button {
+            background: linear-gradient(135deg, #8A2387, #F27121);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 15px;
+            transition: transform 0.2s ease;
+        }
+        
+        .camera-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* NPK specific styles */
+        .npk-values {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .npk-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.02);
+        }
+        
+        .npk-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+        
+        .npk-concentration {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .npk-unit {
+            font-size: 12px;
+            color: var(--gray);
+            margin-left: 4px;
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 70px;
+                overflow: visible;
+            }
+            
+            .logo h2, .menu-title, .menu-item span {
+                display: none;
+            }
+            
+            .menu-item {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .menu-item i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .status-indicator {
+                margin-top: 15px;
+            }
+            
+            .camera-button {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Menu (Removed TCS34725) -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>MicroROS Dashboard</h2>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Navigation</div>
+            <div class="menu-item active" data-section="all">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard Overview</span>
+            </div>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">Sensor Categories</div>
+            <div class="menu-item" data-section="bme280">
+                <i class="fas fa-thermometer-half"></i>
+                <span>BME280</span>
+            </div>
+            <div class="menu-item" data-section="mq135">
+                <i class="fas fa-wind"></i>
+                <span>MQ135 Gas Sensor</span>
+            </div>
+            <div class="menu-item" data-section="npk">
+                <i class="fas fa-seedling"></i>
+                <span>NPK Soil Sensor</span>
+            </div>
+            <div class="menu-item" data-section="raw">
+                <i class="fas fa-microchip"></i>
+                <span>Raw Data</span>
+            </div>
+        </div>
+        
+        <div class="menu-section">
+            <div class="menu-title">System</div>
+            <div class="menu-item" data-section="status">
+                <i class="fas fa-info-circle"></i>
+                <span>System Status</span>
+            </div>
+            <div class="menu-item" id="camera-link">
+                <i class="fas fa-video"></i>
+                <a href = "http://192.168.1.25:5000"></a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard-header">
+            <h1 id="page-title">MicroROS Sensor Dashboard</h1>
+            <div style="display: flex; align-items: center;">
+                <div class="status-indicator">
+                    <div class="status-dot" id="connection-status"></div>
+                    <span id="connection-text">Waiting for data...</span>
+                </div>
+                <button class="camera-button" id="camera-button">
+                    <i class="fas fa-video"></i>
+                    <a href = "http://192.168.1.25:5000">View Cameras</a>
+                </button>
+            </div>
+        </div>
+        
+        <!-- System Status Section -->
+        <div class="category-section" id="status-section" style="display: none;">
+            <h2 class="category-title">System Status</h2>
+            <div class="container">
+                <!-- Connection Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon raw-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <div class="card-title">ROS2 Connection</div>
+                    </div>
+                    <div class="card-value" id="ros-status">Checking...</div>
+                    <div class="card-unit">Status</div>
+                    <div class="update-time" id="ros-update-time">--:--:--</div>
+                </div>
+                
+                <!-- Sensor Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon raw-icon">
+                            <i class="fas fa-satellite"></i>
+                        </div>
+                        <div class="card-title">Sensor Status</div>
+                    </div>
+                    <div class="color-values">
+                        <div class="color-value">
+                            <span class="color-label">MQ135:</span>
+                            <span class="sensor-status" id="status-mq135">--</span>
+                        </div>
+                        <div class="color-value">
+                            <span class="color-label">BME280:</span>
+                            <span class="sensor-status" id="status-bme">--</span>
+                        </div>
+                        <div class="color-value">
+                            <span class="color-label">NPK Sensor:</span>
+                            <span class="sensor-status" id="status-npk">--</span>
+                        </div>
+                    </div>
+                    <div class="update-time" id="sensor-status-time">--:--:--</div>
+                </div>
+                
+                <!-- System Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon raw-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="card-title">System Information</div>
+                    </div>
+                    <div class="connection-info">
+                        <div>Topic: <span id="info-topic">sensor_data_live</span></div>
+                        <div>Message Type: <span id="info-type">Float32MultiArray</span></div>
+                        <div>Update Rate: <span id="info-rate">1 Hz</span></div>
+                        <div>Last Data: <span id="info-last-data">Never</span></div>
+                        <div>Data Size: <span id="info-data-size">11 elements</span></div>
+                    </div>
+                    <div class="update-time" id="system-info-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- All Sensors Section -->
+        <div class="category-section" id="all-section">
+            <h2 class="category-title">All Sensors Overview</h2>
+            <div class="container">
+                <!-- Temperature Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon temp-icon">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <div class="card-title">Temperature</div>
+                        <div class="sensor-status" id="bme-status-indicator">--</div>
+                    </div>
+                    <div class="card-value" id="temp-value">--</div>
+                    <div class="card-unit">°C</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>-20°C</span>
+                            <span id="temp-percent">--%</span>
+                            <span>60°C</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill temp-fill" id="temp-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="temp-time">--:--:--</div>
+                </div>
+                
+                <!-- Humidity Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon humidity-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="card-title">Humidity</div>
+                    </div>
+                    <div class="card-value" id="humidity-value">--</div>
+                    <div class="card-unit">%</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0%</span>
+                            <span id="humidity-percent">--%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill humidity-fill" id="humidity-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="humidity-time">--:--:--</div>
+                </div>
+                
+                <!-- NPK Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon npk-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="card-title">NPK Sensor</div>
+                        <div class="sensor-status" id="npk-status-indicator">--</div>
+                    </div>
+                    <div class="card-value" id="npk-status-value">--</div>
+                    <div class="card-unit">Status</div>
+                    <div class="npk-values" style="margin-top: 15px;">
+                        <div class="npk-item">
+                            <div class="npk-name">Nitrogen</div>
+                            <div class="npk-concentration" id="nitrogen-value">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">Phosphorus</div>
+                            <div class="npk-concentration" id="phosphorus-value">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">Potassium</div>
+                            <div class="npk-concentration" id="potassium-value">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">Soil Moisture</div>
+                            <div class="npk-concentration" id="soil-moisture-value">--</div>
+                            <span class="npk-unit">%</span>
+                        </div>
+                    </div>
+                    <div class="update-time" id="npk-time">--:--:--</div>
+                </div>
+                
+                <!-- Soil Properties Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon soil-icon">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="card-title">Soil Properties</div>
+                    </div>
+                    <div class="card-value" id="soil-temp-value">--</div>
+                    <div class="card-unit">°C</div>
+                    <div class="npk-values" style="margin-top: 15px;">
+                        <div class="npk-item">
+                            <div class="npk-name">Conductivity</div>
+                            <div class="npk-concentration" id="conductivity-value">--</div>
+                            <span class="npk-unit">us/cm</span>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">pH Level</div>
+                            <div class="npk-concentration" id="ph-value">--</div>
+                            <span class="npk-unit">pH</span>
+                        </div>
+                    </div>
+                    <div class="update-time" id="soil-time">--:--:--</div>
+                </div>
+                
+                <!-- Pressure Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon pressure-icon">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </div>
+                        <div class="card-title">Pressure</div>
+                    </div>
+                    <div class="card-value" id="pressure-value">--</div>
+                    <div class="card-unit">hPa</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>900 hPa</span>
+                            <span id="pressure-percent">--%</span>
+                            <span>1100 hPa</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill pressure-fill" id="pressure-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="pressure-time">--:--:--</div>
+                </div>
+                
+                <!-- Altitude Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon altitude-icon">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="card-title">Altitude</div>
+                    </div>
+                    <div class="card-value" id="altitude-value">--</div>
+                    <div class="card-unit">meters</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0 m</span>
+                            <span id="altitude-percent">--%</span>
+                            <span>100 m</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill altitude-fill" id="altitude-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="altitude-time">--:--:--</div>
+                </div>
+                
+                <!-- Gas Concentrations Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon gas-icon">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <div class="card-title">Gas Concentrations</div>
+                        <div class="sensor-status" id="mq135-status-indicator">--</div>
+                    </div>
+                    <div class="gas-values">
+                        <div class="gas-item">
+                            <div class="gas-name">Carbon Monoxide</div>
+                            <div class="gas-concentration" id="co-value">--</div>
+                            <span class="gas-unit">ppm</span>
+                        </div>
+                        <div class="gas-item">
+                            <div class="gas-name">Carbon Dioxide</div>
+                            <div class="gas-concentration" id="co2-value">--</div>
+                            <span class="gas-unit">ppm</span>
+                        </div>
+                        <div class="gas-item">
+                            <div class="gas-name">Ammonia</div>
+                            <div class="gas-concentration" id="nh3-value">--</div>
+                            <span class="gas-unit">ppm</span>
+                        </div>
+                        <div class="gas-item">
+                            <div class="gas-name">Nitrogen Oxides</div>
+                            <div class="gas-concentration" id="nox-value">--</div>
+                            <span class="gas-unit">ppm</span>
+                        </div>
+                    </div>
+                    <div class="update-time" id="gas-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BME280 Section -->
+        <div class="category-section" id="bme280-section" style="display: none;">
+            <h2 class="category-title">BME280 Sensor</h2>
+            <div class="container">
+                <!-- Temperature Detail Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon temp-icon">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <div class="card-title">Temperature</div>
+                    </div>
+                    <div class="card-value" id="bme-temp-value">--</div>
+                    <div class="card-unit">°C</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>-20°C</span>
+                            <span id="bme-temp-percent">--%</span>
+                            <span>60°C</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill temp-fill" id="bme-temp-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="bme-temp-time">--:--:--</div>
+                </div>
+                
+                <!-- Humidity Detail Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon humidity-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="card-title">Humidity</div>
+                    </div>
+                    <div class="card-value" id="bme-humidity-value">--</div>
+                    <div class="card-unit">%</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0%</span>
+                            <span id="bme-humidity-percent">--%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill humidity-fill" id="bme-humidity-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="bme-humidity-time">--:--:--</div>
+                </div>
+                
+                <!-- Pressure Detail Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon pressure-icon">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                        </div>
+                        <div class="card-title">Pressure</div>
+                    </div>
+                    <div class="card-value" id="bme-pressure-value">--</div>
+                    <div class="card-unit">hPa</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>900 hPa</span>
+                            <span id="bme-pressure-percent">--%</span>
+                            <span>1100 hPa</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill pressure-fill" id="bme-pressure-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="bme-pressure-time">--:--:--</div>
+                </div>
+                
+                <!-- Altitude Detail Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon altitude-icon">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="card-title">Altitude</div>
+                    </div>
+                    <div class="card-value" id="bme-altitude-value">--</div>
+                    <div class="card-unit">meters</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0 m</span>
+                            <span id="bme-altitude-percent">--%</span>
+                            <span>1000 m</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill altitude-fill" id="bme-altitude-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="bme-altitude-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MQ135 Section -->
+        <div class="category-section" id="mq135-section" style="display: none;">
+            <h2 class="category-title">MQ135 Gas Sensor</h2>
+            <div class="container">
+                <!-- CO Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon gas-icon">
+                            <i class="fas fa-smog"></i>
+                        </div>
+                        <div class="card-title">Carbon Monoxide</div>
+                    </div>
+                    <div class="card-value" id="mq135-co-value">--</div>
+                    <div class="card-unit">ppm</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0 ppm</span>
+                            <span id="mq135-co-percent">--%</span>
+                            <span>1000 ppm</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill gas-fill" id="mq135-co-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="mq135-co-time">--:--:--</div>
+                </div>
+                
+                <!-- CO2 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon gas-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="card-title">Carbon Dioxide</div>
+                    </div>
+                    <div class="card-value" id="mq135-co2-value">--</div>
+                    <div class="card-unit">ppm</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0 ppm</span>
+                            <span id="mq135-co2-percent">--%</span>
+                            <span>5000 ppm</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill gas-fill" id="mq135-co2-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="mq135-co2-time">--:--:--</div>
+                </div>
+                
+                <!-- Ammonia Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon gas-icon">
+                            <i class="fas fa-skull-crossbones"></i>
+                        </div>
+                        <div class="card-title">Ammonia</div>
+                    </div>
+                    <div class="card-value" id="mq135-nh3-value">--</div>
+                    <div class="card-unit">ppm</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0 ppm</span>
+                            <span id="mq135-nh3-percent">--%</span>
+                            <span>500 ppm</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill gas-fill" id="mq135-nh3-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="mq135-nh3-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NPK Sensor Section -->
+        <div class="category-section" id="npk-section" style="display: none;">
+            <h2 class="category-title">NPK Soil Sensor</h2>
+            <div class="container">
+                <!-- NPK Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon npk-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="card-title">NPK Sensor Status</div>
+                        <div class="sensor-status" id="npk-detail-status">--</div>
+                    </div>
+                    <div class="card-value" id="npk-detail-status-value">--</div>
+                    <div class="card-unit">Connection</div>
+                    <div class="connection-info">
+                        <div>Sensor Type: 7-in-1 NPK Soil Sensor</div>
+                        <div>Interface: RS485 Modbus</div>
+                        <div>Data Points: 7 parameters</div>
+                        <div>Communication: Serial @ 4800 baud</div>
+                    </div>
+                    <div class="update-time" id="npk-detail-time">--:--:--</div>
+                </div>
+                
+                <!-- Soil Nutrients Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon npk-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <div class="card-title">Soil Nutrients</div>
+                    </div>
+                    <div class="npk-values">
+                        <div class="npk-item">
+                            <div class="npk-name">Nitrogen (N)</div>
+                            <div class="npk-concentration" id="npk-nitrogen">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                            <div class="progress-container" style="margin-top: 8px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill npk-fill" id="npk-nitrogen-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">Phosphorus (P)</div>
+                            <div class="npk-concentration" id="npk-phosphorus">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                            <div class="progress-container" style="margin-top: 8px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill npk-fill" id="npk-phosphorus-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">Potassium (K)</div>
+                            <div class="npk-concentration" id="npk-potassium">--</div>
+                            <span class="npk-unit">mg/kg</span>
+                            <div class="progress-container" style="margin-top: 8px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill npk-fill" id="npk-potassium-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="npk-nutrients-time">--:--:--</div>
+                </div>
+                
+                <!-- Soil Properties Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon soil-icon">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div class="card-title">Soil Temperature</div>
+                    </div>
+                    <div class="card-value" id="npk-soil-temp">--</div>
+                    <div class="card-unit">°C</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0°C</span>
+                            <span id="npk-soil-temp-percent">--%</span>
+                            <span>50°C</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill temp-fill" id="npk-soil-temp-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="npk-soil-temp-time">--:--:--</div>
+                </div>
+                
+                <!-- Soil Moisture Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon soil-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="card-title">Soil Moisture</div>
+                    </div>
+                    <div class="card-value" id="npk-soil-moisture">--</div>
+                    <div class="card-unit">%</div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>0%</span>
+                            <span id="npk-soil-moisture-percent">--%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill soil-fill" id="npk-soil-moisture-bar"></div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="npk-soil-moisture-time">--:--:--</div>
+                </div>
+                
+                <!-- Soil Chemistry Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon soil-icon">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div class="card-title">Soil Chemistry</div>
+                    </div>
+                    <div class="npk-values">
+                        <div class="npk-item">
+                            <div class="npk-name">Conductivity</div>
+                            <div class="npk-concentration" id="npk-conductivity">--</div>
+                            <span class="npk-unit">us/cm</span>
+                        </div>
+                        <div class="npk-item">
+                            <div class="npk-name">pH Level</div>
+                            <div class="npk-concentration" id="npk-ph">--</div>
+                            <span class="npk-unit">pH</span>
+                            <div class="progress-container" style="margin-top: 8px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill npk-fill" id="npk-ph-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="update-time" id="npk-chemistry-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Raw Data Section -->
+        <div class="category-section" id="raw-section" style="display: none;">
+            <h2 class="category-title">Raw Sensor Data</h2>
+            <div class="container">
+                <!-- Raw Data Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon raw-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div class="card-title">All Sensor Readings</div>
+                    </div>
+                    <div class="raw-data-panel">
+                        <div class="raw-data-line">
+                            <span>MQ135 Raw:</span>
+                            <span id="raw-mq135">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Temperature:</span>
+                            <span id="raw-temp">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Humidity:</span>
+                            <span id="raw-humidity">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Pressure:</span>
+                            <span id="raw-pressure">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Soil Moisture:</span>
+                            <span id="raw-soil-moisture">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Soil Temperature:</span>
+                            <span id="raw-soil-temp">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Soil Conductivity:</span>
+                            <span id="raw-conductivity">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Soil pH:</span>
+                            <span id="raw-ph">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Nitrogen:</span>
+                            <span id="raw-nitrogen">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Phosphorus:</span>
+                            <span id="raw-phosphorus">--</span>
+                        </div>
+                        <div class="raw-data-line">
+                            <span>Potassium:</span>
+                            <span id="raw-potassium">--</span>
+                        </div>
+                    </div>
+                    <div class="update-time" id="raw-data-time">--:--:--</div>
+                </div>
+                
+                <!-- MicroROS Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon raw-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="card-title">MicroROS Information</div>
+                    </div>
+                    <div class="connection-info">
+                        <div>Node Name: <span id="ros-node">esp32_sensor_node</span></div>
+                        <div>Topic: <span id="ros-topic">/sensor_data_live</span></div>
+                        <div>Message Type: <span id="ros-msg-type">std_msgs/Float32MultiArray</span></div>
+                        <div>Data Size: <span id="ros-data-size">11 elements</span></div>
+                        <div>Update Rate: <span id="ros-update-rate">0.5 Hz</span></div>
+                    </div>
+                    <div class="update-time" id="ros-info-time">--:--:--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Current sensor data - Updated to remove TCS34725
+        let sensorData = {
+            mq135: 0,
+            temperature: 0,
+            humidity: 0,
+            pressure: 0,
+            co_ppm: 0,
+            co2_ppm: 0,
+            nh3_ppm: 0,
+            nox_ppm: 0,
+            altitude: 0,
+            mq135_status: 0,
+            bme280_status: 0,
+            npk_status: 0,
+            soil_moisture: 0,
+            soil_temperature: 0,
+            soil_conductivity: 0,
+            soil_ph: 0,
+            nitrogen: 0,
+            phosphorus: 0,
+            potassium: 0,
+            last_update: '',
+            connected: false
+        };
+        
+        // Sensor value ranges
+        const sensorRanges = {
+            temperature: { min: -20, max: 60 },
+            humidity: { min: 0, max: 100 },
+            pressure: { min: 900, max: 1100 },
+            altitude: { min: 0, max: 1000 },
+            co: { min: 0, max: 1000 },
+            co2: { min: 0, max: 5000 },
+            mq135_raw: { min: 0, max: 4095 },
+            soil_temperature: { min: 0, max: 50 },
+            soil_moisture: { min: 0, max: 100 },
+            nitrogen: { min: 0, max: 500 },
+            phosphorus: { min: 0, max: 200 },
+            potassium: { min: 0, max: 500 },
+            soil_ph: { min: 0, max: 14 },
+            soil_conductivity: { min: 0, max: 10000 }
+        };
+        
+
+        // Fetch sensor data from Flask API
+        async function fetchSensorData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                updateSensorData(data);
+                updateDashboard();
+            } catch (error) {
+                console.error('Error fetching sensor data:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // Fetch system status
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                updateSystemStatus(data);
+            } catch (error) {
+                console.error('Error fetching system status:', error);
+            }
+        }
+        
+        // Update sensor data object
+        function updateSensorData(data) {
+            Object.assign(sensorData, data);
+            updateConnectionStatus(sensorData.connected);
+        }
+        
+        // Update system status
+        function updateSystemStatus(data) {
+            document.getElementById('ros-status').textContent = data.ros_status ? 'Connected' : 'Disconnected';
+            document.getElementById('ros-status').style.color = data.ros_status ? '#2ecc71' : '#e74c3c';
+            document.getElementById('ros-update-time').textContent = formatTime(data.last_update);
+            
+            // Update sensor status indicators
+            document.getElementById('status-mq135').textContent = data.sensor_status.mq135 ? 'ON' : 'OFF';
+            document.getElementById('status-mq135').className = data.sensor_status.mq135 ? 'sensor-status on' : 'sensor-status off';
+            
+            document.getElementById('status-bme').textContent = data.sensor_status.bme280 ? 'ON' : 'OFF';
+            document.getElementById('status-bme').className = data.sensor_status.bme280 ? 'sensor-status on' : 'sensor-status off';
+            
+            document.getElementById('status-npk').textContent = data.sensor_status.npk ? 'ON' : 'OFF';
+            document.getElementById('status-npk').className = data.sensor_status.npk ? 'sensor-status on' : 'sensor-status off';
+            
+            document.getElementById('sensor-status-time').textContent = formatTime(data.last_update);
+            document.getElementById('info-last-data').textContent = formatTime(data.last_update);
+        }
+        
+        // Update connection status display
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('connection-status');
+            const statusText = document.getElementById('connection-text');
+            
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'Connected to MicroROS';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'Disconnected from MicroROS';
+            }
+        }
+        
+        // Update dashboard with current data
+        function updateDashboard() {
+            const timeString = formatTime(sensorData.last_update);
+            
+            // Update All Sensors section
+            document.getElementById('temp-value').textContent = sensorData.temperature.toFixed(1);
+            updateSensorProgress('temp', sensorData.temperature, sensorRanges.temperature.min, sensorRanges.temperature.max);
+            document.getElementById('temp-time').textContent = timeString;
+            
+            document.getElementById('humidity-value').textContent = sensorData.humidity.toFixed(1);
+            updateSensorProgress('humidity', sensorData.humidity, sensorRanges.humidity.min, sensorRanges.humidity.max);
+            document.getElementById('humidity-time').textContent = timeString;
+            
+            document.getElementById('pressure-value').textContent = sensorData.pressure.toFixed(1);
+            updateSensorProgress('pressure', sensorData.pressure, sensorRanges.pressure.min, sensorRanges.pressure.max);
+            document.getElementById('pressure-time').textContent = timeString;
+            
+            document.getElementById('altitude-value').textContent = sensorData.altitude.toFixed(1);
+            updateSensorProgress('altitude', sensorData.altitude, sensorRanges.altitude.min, sensorRanges.altitude.max);
+            document.getElementById('altitude-time').textContent = timeString;
+            
+            // Update gas values
+            document.getElementById('co-value').textContent = sensorData.co_ppm.toFixed(1);
+            document.getElementById('co2-value').textContent = sensorData.co2_ppm.toFixed(0);
+            document.getElementById('nh3-value').textContent = sensorData.nh3_ppm.toFixed(1);
+            document.getElementById('nox-value').textContent = sensorData.nox_ppm.toFixed(1);
+            document.getElementById('gas-time').textContent = timeString;
+
+            
+            // Update sensor status indicators
+            updateSensorStatus('bme', sensorData.bme280_status);
+            updateSensorStatus('mq135', sensorData.mq135_status);
+            updateSensorStatus('npk', sensorData.npk_status);
+            
+            // Update NPK data
+            document.getElementById('npk-status-value').textContent = sensorData.npk_status ? 'ONLINE' : 'OFFLINE';
+            document.getElementById('npk-status-value').style.color = sensorData.npk_status ? '#2ecc71' : '#e74c3c';
+            document.getElementById('nitrogen-value').textContent = sensorData.nitrogen.toFixed(0);
+            document.getElementById('phosphorus-value').textContent = sensorData.phosphorus.toFixed(0);
+            document.getElementById('potassium-value').textContent = sensorData.potassium.toFixed(0);
+            document.getElementById('soil-moisture-value').textContent = sensorData.soil_moisture.toFixed(1);
+            document.getElementById('soil-temp-value').textContent = sensorData.soil_temperature.toFixed(1);
+            document.getElementById('conductivity-value').textContent = sensorData.soil_conductivity.toFixed(0);
+            document.getElementById('ph-value').textContent = sensorData.soil_ph.toFixed(1);
+            document.getElementById('npk-time').textContent = timeString;
+            document.getElementById('soil-time').textContent = timeString;
+            
+            // Update BME280 section
+            document.getElementById('bme-temp-value').textContent = sensorData.temperature.toFixed(1);
+            updateSensorProgress('bme-temp', sensorData.temperature, sensorRanges.temperature.min, sensorRanges.temperature.max);
+            document.getElementById('bme-temp-time').textContent = timeString;
+            
+            document.getElementById('bme-humidity-value').textContent = sensorData.humidity.toFixed(1);
+            updateSensorProgress('bme-humidity', sensorData.humidity, sensorRanges.humidity.min, sensorRanges.humidity.max);
+            document.getElementById('bme-humidity-time').textContent = timeString;
+            
+            document.getElementById('bme-pressure-value').textContent = sensorData.pressure.toFixed(1);
+            updateSensorProgress('bme-pressure', sensorData.pressure, sensorRanges.pressure.min, sensorRanges.pressure.max);
+            document.getElementById('bme-pressure-time').textContent = timeString;
+            
+            document.getElementById('bme-altitude-value').textContent = sensorData.altitude.toFixed(1);
+            updateSensorProgress('bme-altitude', sensorData.altitude, sensorRanges.altitude.min, sensorRanges.altitude.max);
+            document.getElementById('bme-altitude-time').textContent = timeString;
+            
+            // Update MQ135 section
+            document.getElementById('mq135-detail-raw-value').textContent = sensorData.mq135.toFixed(0);
+            updateSensorProgress('mq135-detail-raw', sensorData.mq135, sensorRanges.mq135_raw.min, sensorRanges.mq135_raw.max);
+            document.getElementById('mq135-detail-raw-time').textContent = timeString;
+            
+            document.getElementById('mq135-co-value').textContent = sensorData.co_ppm.toFixed(1);
+            updateSensorProgress('mq135-co', sensorData.co_ppm, sensorRanges.co.min, sensorRanges.co.max);
+            document.getElementById('mq135-co-time').textContent = timeString;
+            
+            document.getElementById('mq135-co2-value').textContent = sensorData.co2_ppm.toFixed(0);
+            updateSensorProgress('mq135-co2', sensorData.co2_ppm, sensorRanges.co2.min, sensorRanges.co2.max);
+            document.getElementById('mq135-co2-time').textContent = timeString;
+            
+            document.getElementById('mq135-nh3-value').textContent = sensorData.nh3_ppm.toFixed(1);
+            updateSensorProgress('mq135-nh3', sensorData.nh3_ppm, 0, 500);
+            document.getElementById('mq135-nh3-time').textContent = timeString;
+            
+            // Update NPK section
+            document.getElementById('npk-detail-status-value').textContent = sensorData.npk_status ? 'CONNECTED' : 'DISCONNECTED';
+            document.getElementById('npk-detail-status-value').style.color = sensorData.npk_status ? '#2ecc71' : '#e74c3c';
+            document.getElementById('npk-detail-status').textContent = sensorData.npk_status ? 'ON' : 'OFF';
+            document.getElementById('npk-detail-status').className = sensorData.npk_status ? 'sensor-status on' : 'sensor-status off';
+            
+            document.getElementById('npk-nitrogen').textContent = sensorData.nitrogen.toFixed(0);
+            updateSensorProgress('npk-nitrogen', sensorData.nitrogen, sensorRanges.nitrogen.min, sensorRanges.nitrogen.max);
+            
+            document.getElementById('npk-phosphorus').textContent = sensorData.phosphorus.toFixed(0);
+            updateSensorProgress('npk-phosphorus', sensorData.phosphorus, sensorRanges.phosphorus.min, sensorRanges.phosphorus.max);
+            
+            document.getElementById('npk-potassium').textContent = sensorData.potassium.toFixed(0);
+            updateSensorProgress('npk-potassium', sensorData.potassium, sensorRanges.potassium.min, sensorRanges.potassium.max);
+            
+            document.getElementById('npk-soil-temp').textContent = sensorData.soil_temperature.toFixed(1);
+            updateSensorProgress('npk-soil-temp', sensorData.soil_temperature, sensorRanges.soil_temperature.min, sensorRanges.soil_temperature.max);
+            
+            document.getElementById('npk-soil-moisture').textContent = sensorData.soil_moisture.toFixed(1);
+            updateSensorProgress('npk-soil-moisture', sensorData.soil_moisture, sensorRanges.soil_moisture.min, sensorRanges.soil_moisture.max);
+            
+            document.getElementById('npk-conductivity').textContent = sensorData.soil_conductivity.toFixed(0);
+            document.getElementById('npk-ph').textContent = sensorData.soil_ph.toFixed(1);
+            updateSensorProgress('npk-ph', sensorData.soil_ph, sensorRanges.soil_ph.min, sensorRanges.soil_ph.max);
+            
+            document.getElementById('npk-detail-time').textContent = timeString;
+            document.getElementById('npk-nutrients-time').textContent = timeString;
+            document.getElementById('npk-soil-temp-time').textContent = timeString;
+            document.getElementById('npk-soil-moisture-time').textContent = timeString;
+            document.getElementById('npk-chemistry-time').textContent = timeString;
+            
+            // Update raw data section
+            document.getElementById('raw-mq135').textContent = sensorData.mq135.toFixed(0);
+            document.getElementById('raw-temp').textContent = sensorData.temperature.toFixed(1) + ' °C';
+            document.getElementById('raw-humidity').textContent = sensorData.humidity.toFixed(1) + ' %';
+            document.getElementById('raw-pressure').textContent = sensorData.pressure.toFixed(1) + ' hPa';
+            document.getElementById('raw-soil-moisture').textContent = sensorData.soil_moisture.toFixed(1) + ' %';
+            document.getElementById('raw-soil-temp').textContent = sensorData.soil_temperature.toFixed(1) + ' °C';
+            document.getElementById('raw-conductivity').textContent = sensorData.soil_conductivity.toFixed(0) + ' us/cm';
+            document.getElementById('raw-ph').textContent = sensorData.soil_ph.toFixed(1);
+            document.getElementById('raw-nitrogen').textContent = sensorData.nitrogen.toFixed(0) + ' mg/kg';
+            document.getElementById('raw-phosphorus').textContent = sensorData.phosphorus.toFixed(0) + ' mg/kg';
+            document.getElementById('raw-potassium').textContent = sensorData.potassium.toFixed(0) + ' mg/kg';
+            document.getElementById('raw-data-time').textContent = timeString;
+            
+            // Update ROS info
+            document.getElementById('ros-info-time').textContent = timeString;
+        }
+        
+        // Update sensor progress bar
+        function updateSensorProgress(elementId, value, min, max) {
+            // Calculate percentage
+            let percent = ((value - min) / (max - min)) * 100;
+            percent = Math.max(0, Math.min(100, percent));
+            
+            // Update percentage display
+            const percentElement = document.getElementById(elementId + '-percent');
+            if (percentElement) {
+                percentElement.textContent = percent.toFixed(1) + '%';
+            }
+            
+            // Update progress bar
+            const barElement = document.getElementById(elementId + '-bar');
+            if (barElement) {
+                barElement.style.width = percent + '%';
+            }
+        }
+        
+        // Update sensor status indicator
+        function updateSensorStatus(sensor, status) {
+            const indicator = document.getElementById(sensor + '-status-indicator');
+            if (indicator) {
+                if (status === 1) {
+                    indicator.textContent = 'ON';
+                    indicator.className = 'sensor-status on';
+                } else {
+                    indicator.textContent = 'OFF';
+                    indicator.className = 'sensor-status off';
+                }
+            }
+        }
+        
+        // Format time string
+        function formatTime(isoString) {
+            if (!isoString || isoString === 'Never') return '--:--:--';
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString('en-US', { 
+                    hour12: true, 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } catch (e) {
+                return '--:--:--';
+            }
+        }
+        
+        // Sidebar navigation
+        document.querySelectorAll('.menu-item[data-section]').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all items
+                document.querySelectorAll('.menu-item[data-section]').forEach(i => {
+                    i.classList.remove('active');
+                });
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                const section = this.getAttribute('data-section');
+                
+                // Hide all sections first
+                document.querySelectorAll('.category-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show selected section
+                if (section === 'all') {
+                    document.getElementById('all-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'MicroROS Sensor Dashboard';
+                } else if (section === 'bme280') {
+                    document.getElementById('bme280-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'BME280 Sensor Data';
+                } else if (section === 'mq135') {
+                    document.getElementById('mq135-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'MQ135 Gas Sensor Data';
+                } else if (section === 'npk') {
+                    document.getElementById('npk-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'NPK Soil Sensor Data';
+                } else if (section === 'raw') {
+                    document.getElementById('raw-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'Raw Sensor Data';
+                } else if (section === 'status') {
+                    document.getElementById('status-section').style.display = 'block';
+                    document.getElementById('page-title').textContent = 'System Status';
+                }
+            });
+        });
+        
+        // Initialize dashboard
+        fetchSensorData();
+        fetchSystemStatus();
+        
+        // Update every 2 seconds
+        setInterval(fetchSensorData, 2000);
+        setInterval(fetchSystemStatus, 2000);
+    </script>
+</body>
+</html>

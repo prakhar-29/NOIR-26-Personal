@@ -453,7 +453,7 @@ private:
                 {
                     // TurtleBot-style obstacle avoidance with proportional control
                     double kpz = 0.4;  // Proportional gain from TurtleBot code
-                    double linvel = 0.4;  // Linear velocity from TurtleBot code
+                    double linvel = 0.5;  // Linear velocity from TurtleBot code
                     
                     cmd.linear.x = linvel;
                     

@@ -35,7 +35,7 @@ private:
         auto v_arm = geometry_msgs::msg::Twist();
         if(msg->buttons[0]!=0)//cross
         {
-            v_arm.linear.y  = -msg->axes[1];//
+            v_arm.linear.y  = msg->axes[1];//
         }
         if(msg->buttons[1]!=0)//circle
         {
@@ -47,7 +47,7 @@ private:
         }
         if(msg->buttons[3]!=0)//square
         {
-            v_arm.angular.y = -msg->axes[1];//
+            v_arm.angular.y = msg->axes[1];//
         }
         else if(msg->buttons[0] ==0 && msg->buttons[1] ==0 && msg->buttons[2] ==0 && msg->buttons[3] ==0)
         {

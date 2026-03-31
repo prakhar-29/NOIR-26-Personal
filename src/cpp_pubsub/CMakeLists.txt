@@ -16,84 +16,18 @@ find_package(geodesy REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-add_executable(ps4 src/ps4_teleop.cpp)
-ament_target_dependencies(ps4 rclcpp geometry_msgs sensor_msgs)
 
 add_executable(2ps4 src/ps4_combined.cpp)
 ament_target_dependencies(2ps4 rclcpp geometry_msgs sensor_msgs)
 
 add_executable(ps4_abex src/ps4_abex.cpp)
-ament_target_dependencies(ps4_abex rclcpp geometry_msgs sensor_msgs)
-
-add_executable(gps_sub src/gps_sub.cpp)
-ament_target_dependencies(gps_sub rclcpp geometry_msgs sensor_msgs std_msgs)
-
-add_executable(lidarmin src/lidar_min_dist.cpp)
-ament_target_dependencies(lidarmin rclcpp geometry_msgs sensor_msgs)
-
-add_executable(rough src/rough.cpp)
-ament_target_dependencies(rough rclcpp geometry_msgs sensor_msgs)
-
-add_executable(rough2 src/ROUGH.cpp)
-ament_target_dependencies(rough2 rclcpp geometry_msgs sensor_msgs std_msgs)
-
-add_executable(rough3 src/rough3.cpp)
-ament_target_dependencies(rough3 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough4 src/rough4.cpp)
-ament_target_dependencies(rough4 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough5 src/rough5.cpp)
-ament_target_dependencies(rough5 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough6 src/rough6.cpp)
-ament_target_dependencies(rough6 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough7 src/rough7.cpp)
-ament_target_dependencies(rough7 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough8 src/rough8.cpp)
-ament_target_dependencies(rough8 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough9 src/rough9.cpp)
-ament_target_dependencies(rough9 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough10 src/rough10.cpp)
-ament_target_dependencies(rough10 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough11 src/rough11.cpp)
-ament_target_dependencies(rough11 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rado1 src/rado1.cpp)
-ament_target_dependencies(rado1 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough13 src/rough13.cpp)
-ament_target_dependencies(rough13 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough14 src/rough14.cpp)
-ament_target_dependencies(rough14 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough15 src/rough15.cpp)
-ament_target_dependencies(rough15 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough16 src/rough16.cpp)
-ament_target_dependencies(rough16 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-
-add_executable(rough17 src/rough17.cpp)
-ament_target_dependencies(rough17 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough18 src/rough18.cpp)
-ament_target_dependencies(rough18 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough19 src/rough19.cpp)
-ament_target_dependencies(rough19 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
-
-add_executable(rough20 src/rough20.cpp)
-ament_target_dependencies(rough20 geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+ament_target_dependencies(ps4_abex rclcpp geometry_msgs sensor_msgs std_msgs)
 
 add_executable(rado_final src/rado_final.cpp)
 ament_target_dependencies(rado_final geodesy rclcpp geometry_msgs sensor_msgs std_msgs geographic_msgs)
+
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -107,32 +41,9 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 install(TARGETS
-  ps4
   2ps4
-  gps_sub
-  lidarmin
-  rough
-  rough2
-  rough3
-  rough4
-  rough5
-  rough6
-  rough7
-  rough8
-  rough9
-  rough10
-  rough11
-  rado1
-  rough13
-  rough14
-  rough15
-  rough16
-  rough17
-  rough18
-  rough19
-  rough20
-  rado_final
   ps4_abex
+  rado_final
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
