@@ -102,7 +102,7 @@ ros2 launch my_launch rado_auto.launch.py
 
 ## 🤖 Arduino (micro-ROS)
 
-* Microcontroller code for ESP32 Micontroller
+* Microcontroller code for ESP32 Microcontroller
 * Use micro_ros_arduino library built for ROS2 Humble only
 
 **Repository Link:**
