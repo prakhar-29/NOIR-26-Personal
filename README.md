@@ -16,11 +16,11 @@ It includes:
 
 ## 📁 Workspace Structure  
 
-src/
-├── openvino_cone_detection/
-├── cpp_pubsub/
-├── py_pubsub/
-├── my_launch/
+-src/
+- ├── openvino_cone_detection/
+- ├── cpp_pubsub/
+- ├── py_pubsub/
+- ├── my_launch/
 
 
 ---
