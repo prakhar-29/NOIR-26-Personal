@@ -69,7 +69,7 @@ rosdep install --from-paths src --ignore-src -r -y
 Driver: https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2  
 
 ### GPS  
-We use - Neo M8N GPS module  
+Driver: [nmea_navsat_driver](https://github.com/ros-drivers/nmea_navsat_driver/tree/ros2)
 
 ---
 
