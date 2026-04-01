@@ -16,11 +16,11 @@ It includes:
 
 ## 📁 Workspace Structure  
 
--src/  
-├── openvino_cone_detection/
-├── cpp_pubsub/
-├── py_pubsub/
-├── my_launch/
+src/  
+├── openvino_cone_detection/  
+├── cpp_pubsub/  
+├── py_pubsub/  
+├── my_launch/  
 
 
 ---
@@ -57,8 +57,8 @@ This workspace depends on:
 
 ### ✅ Install All Dependencies  
 
--cd ~/your_workspace  
--rosdep install --from-paths src --ignore-src -r -y  
+cd ~/your_workspace  
+rosdep install --from-paths src --ignore-src -r -y  
 
 
 ---
