@@ -16,11 +16,11 @@ It includes:
 
 ## 📁 Workspace Structure  
 
--src/
-- ├── openvino_cone_detection/
-- ├── cpp_pubsub/
-- ├── py_pubsub/
-- ├── my_launch/
+-src/  
+├── openvino_cone_detection/
+├── cpp_pubsub/
+├── py_pubsub/
+├── my_launch/
 
 
 ---
@@ -57,8 +57,8 @@ This workspace depends on:
 
 ### ✅ Install All Dependencies  
 
--cd ~/your_workspace
--rosdep install --from-paths src --ignore-src -r -y
+-cd ~/your_workspace  
+-rosdep install --from-paths src --ignore-src -r -y  
 
 
 ---
@@ -77,32 +77,32 @@ We use - Neo M8N GPS module
 
 ### 🔵 IDMO Task  
 
--ros2 launch my_launch joy2.launch.py
--ros2 run cpp_pubsub 2ps4
--ros2 launch my_launch idmo.launch.py
+- ros2 launch my_launch joy2.launch.py
+- ros2 run cpp_pubsub 2ps4
+- ros2 launch my_launch idmo.launch.py
 
 
 ### 🟢 ABEX Task  
 
--ros2 launch my_launch joy2.launch.py
--ros2 run cpp_pubsub ps4_abex
--ros2 launch my_launch abex.launch.py
+- ros2 launch my_launch joy2.launch.py
+- ros2 run cpp_pubsub ps4_abex
+- ros2 launch my_launch abex.launch.py
 
 
 ### 🔴 RADO Task  
 
 #### Recon  
 
--ros2 launch my_launch joy2.launch.py
--ros2 run cpp_pubsub 2ps4
--ros2 launch my_launch rado_sensors.launch.py
--ros2 launch my_launch rado_recon.launch.py
+- ros2 launch my_launch joy2.launch.py
+- ros2 run cpp_pubsub 2ps4
+- ros2 launch my_launch rado_sensors.launch.py
+- ros2 launch my_launch rado_recon.launch.py
 
 
 #### Autonomous Delivery  
 
--ros2 launch my_launch rado_sensors.launch.py
--ros2 launch my_launch rado_auto.launch.py
+- ros2 launch my_launch rado_sensors.launch.py
+- ros2 launch my_launch rado_auto.launch.py
 
 
 ---
