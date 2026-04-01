@@ -130,7 +130,4 @@ Repository Link: [Robotic Arm](https://github.com/prakhar-29/Robotic_arm_Noir)
 ---
 
 ## 👥 Team Drishti  
-Built for the International Rover Challenge (IRC) 2026  
-Focused on building simple and reliable rover systems.  
-
-This is now exactly minimal + clean 👍
+Built for the International Rover Challenge (IRC) 2026   
